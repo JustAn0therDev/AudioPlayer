@@ -4,10 +4,18 @@
 const int WIDTH = 1024;
 const int HEIGHT = 720;
 
-HWND hwndButton = { 0 };
+HWND hwndPlayButton = { 0 };
 HWND hwndMain = { 0 };
+HWND hwndStopButton = { 0 };
 
-LRESULT BtnWndProc(
+LRESULT BtnPlayWndProc(
+	HWND hInstance,
+	UINT msg,
+	WPARAM wAddMsgInfo,
+	LPARAM lAddMsgInfo
+);
+
+LRESULT BtnStopWndProc(
 	HWND hInstance,
 	UINT msg,
 	WPARAM wAddMsgInfo,
@@ -21,41 +29,43 @@ LRESULT WndProc(
 	LPARAM lParam
 ) {
 	switch (msg) {
-	case WM_COMMAND: {
-		if (lParam == (LPARAM)hwndButton) {
-			return BtnWndProc(hInstance, WM_LBUTTONDOWN, wParam, lParam);
+		case WM_COMMAND: {
+			if (lParam == (LPARAM)hwndPlayButton) {
+				return BtnPlayWndProc(hInstance, WM_LBUTTONDOWN, wParam, lParam);
+			} else if (lParam == (LPARAM)hwndStopButton) {
+				return BtnStopWndProc(hInstance, WM_LBUTTONDOWN, wParam, lParam);
+			}
 		}
-	}
 
-	case WM_CLOSE: {
-		PostQuitMessage(0);
-		return 0;
-	}
+		case WM_CLOSE: {
+			PostQuitMessage(0);
+			return 0;
+		}
 
-	case WM_DESTROY: {
-		PostQuitMessage(0);
-		return 0;
-	}
+		case WM_DESTROY: {
+			PostQuitMessage(0);
+			return 0;
+		}
 
-	case WM_PAINT: {
-		PAINTSTRUCT ps;
+		case WM_PAINT: {
+			PAINTSTRUCT ps;
 
-		HDC hdc = BeginPaint(hInstance, &ps);
+			HDC hdc = BeginPaint(hInstance, &ps);
 
-		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_BACKGROUND + 1));
+			FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_BACKGROUND + 1));
 
-		EndPaint(hInstance, &ps);
+			EndPaint(hInstance, &ps);
 
-		return 0;
-	}
+			return 0;
+		}
 
-	default: {
-		return DefWindowProc(hInstance, msg, wParam, lParam);
-	}
+		default: {
+			return DefWindowProc(hInstance, msg, wParam, lParam);
+		}
 	}
 }
 
-LRESULT BtnWndProc(
+LRESULT BtnPlayWndProc(
 	HWND hInstance,
 	UINT msg,
 	WPARAM wParam,
@@ -77,6 +87,26 @@ LRESULT BtnWndProc(
 	}
 	}
 }
+
+LRESULT BtnStopWndProc(
+	HWND hInstance,
+	UINT msg,
+	WPARAM wParam,
+	LPARAM lParam
+) {
+	switch (msg) {
+		case WM_LBUTTONDOWN: {
+			PlaySound(0, 0, 0);
+			return 0;
+		}
+
+		default:
+		{
+			return DefWindowProc(hInstance, msg, wParam, lParam);
+		}
+	}
+}
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -112,20 +142,38 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		return 1;
 	}
 
-	hwndButton = CreateWindow(
+	hwndPlayButton = CreateWindow(
 		L"BUTTON",  // Predefined class; Unicode assumed 
-		L"PLAY",      // Button text 
+		L"PLAY",    // Button text 
 		WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Styles 
-		(WIDTH / 2) - 55,        // x position 
+		(WIDTH / 2) - 250,         // x position 
 		(HEIGHT / 2) - 55,        // y position 
-		100,				  // button size (width)
-		100,				  // button size (height)
+		100,				      // button size (width)
+		100,				      // button size (height)
 		hwndMain,				  // Parent window
-		0,                 // No menu.
+		0,                        // No menu.
 		(HINSTANCE)GetWindowLongPtr(hwndMain, GWLP_HINSTANCE),
-		0);      // Pointer not needed.
+		0);                       // Pointer not needed.
 
-	if (hwndButton == 0) {
+	if (hwndPlayButton == 0) {
+		PostQuitMessage(0);
+		return 1;
+	}
+
+	hwndStopButton = CreateWindow(
+		L"BUTTON",  // Predefined class; Unicode assumed 
+		L"STOP",    // Button text 
+		WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, // Styles 
+		(WIDTH / 2) + 200,         // x position 
+		(HEIGHT / 2) - 55,        // y position 
+		100,				      // button size (width)
+		100,				      // button size (height)
+		hwndMain,				  // Parent window
+		0,                        // No menu.
+		(HINSTANCE)GetWindowLongPtr(hwndMain, GWLP_HINSTANCE),
+		0);                       // Pointer not needed.
+
+	if (hwndStopButton == 0) {
 		PostQuitMessage(0);
 		return 1;
 	}
@@ -142,7 +190,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 
 	DestroyWindow(hwndMain);
-	DestroyWindow(hwndButton);
+	DestroyWindow(hwndPlayButton);
+	DestroyWindow(hwndStopButton);
 
 	return (int)msg.wParam;
 }
